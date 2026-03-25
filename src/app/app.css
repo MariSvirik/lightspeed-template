@@ -1,0 +1,134 @@
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Content example: metadata height follows content (grid avoids flex column stretch) */
+.app-content-example-detail {
+  margin-block-end: 0;
+  align-self: flex-start;
+  width: 100%;
+}
+
+.app-content-example-detail__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--pf-t--global--spacer--md);
+  align-items: start;
+  width: 100%;
+}
+
+@media (min-width: 48rem) {
+  .app-content-example-detail__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.app-content-example-detail .pf-v6-c-description-list {
+  margin-block-end: 0;
+}
+
+/* Toolbar: md between bulk→filter and search→rest; sm (8px) between filter→search */
+.app-template-toolbar .app-template-toolbar-leading {
+  --pf-v6-c-toolbar__group--ColumnGap: 0;
+}
+
+.app-template-toolbar .app-toolbar-item-bulk {
+  margin-inline-end: var(--pf-t--global--spacer--md);
+}
+
+.app-template-toolbar .app-toolbar-item-toolbar-filter {
+  margin-inline-end: var(--pf-t--global--spacer--sm);
+}
+
+.app-template-toolbar .app-toolbar-item-search {
+  margin-inline-end: var(--pf-t--global--spacer--md);
+}
+
+.app-template-toolbar .app-toolbar-item-export,
+.app-template-toolbar .app-toolbar-item-edit,
+.app-template-toolbar .app-toolbar-item-duplicate {
+  margin-inline-end: var(--pf-t--global--spacer--md);
+}
+
+/* Toolbar + table: single inset panel (used on list and detail) */
+.app-systems-toolbar-table-panel {
+  box-sizing: border-box;
+  width: 100%;
+  padding-block-start: 16px;
+  padding-inline: 20px;
+  padding-block-end: 16px;
+}
+
+.app-systems-toolbar-table-panel__table {
+  background-color: var(--pf-t--global--background--color--primary--default);
+}
+
+.app-page-templates-section .app-systems-toolbar-table-panel {
+  padding: 0;
+}
+
+.app-template-detail-systems-section .app-systems-toolbar-table-panel {
+  padding: 0;
+}
+
+.app-template-detail-systems-section.app-tabbed-detail-systems-section .app-systems-toolbar-table-panel {
+  padding-block-start: 16px;
+  padding-inline: 20px;
+  padding-block-end: 16px;
+}
+
+.app-page-templates-section .app-systems-toolbar-table-panel > *:not(.pf-v6-c-toolbar) {
+  background-color: var(--pf-t--global--background--color--primary--default);
+}
+
+.pf-v6-c-divider.app-template-detail-section-divider {
+  --pf-v6-c-divider--before--FlexBasis: calc(100% - 40px);
+}
+
+/* Recommendation Total risk card: hide danger status icon beside bars */
+.app-recommendation-total-risk-card .pf-v6-c-progress__status {
+  display: none;
+}
+
+/* Title ↔ bar gap: 8px (spacer sm) */
+.app-recommendation-total-risk-card .pf-v6-c-progress {
+  --pf-v6-c-progress--GridGap: var(--pf-t--global--spacer--sm);
+}
+
+.app-recommendation-total-risk-card__progress-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: var(--pf-t--global--spacer--md);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.app-recommendation-total-risk-card__progress-row > .pf-v6-c-progress {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Remove PatternFly toolbar bottom margin gap above table */
+.app-template-toolbar.pf-v6-c-toolbar {
+  margin-block-end: 0;
+}
+
+.pf-v6-c-content {
+  --pf-v6-c-content--small--Color: var(--pf-t--global--color--status--danger--default);
+  --pf-v6-c-content--blockquote--BorderLeftColor: var(--pf-t--global--color--nonstatus--purple--default);
+  --pf-v6-c-content--hr--BackgroundColor: var(--pf-t--global--color--nonstatus--yellow--default);
+}
+
+body.fidelity-low {
+  filter: grayscale(100%);
+}
+
+body.fidelity-low,
+body.fidelity-low * {
+  font-family: 'Comic Sans MS', 'Comic Sans', cursive !important;
+}

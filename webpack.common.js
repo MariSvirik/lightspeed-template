@@ -1,12 +1,15 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 const path = require('path');
+const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const Dotenv = require('dotenv-webpack');
 const BG_IMAGES_DIRNAME = 'bgimages';
 const ASSET_PATH = process.env.ASSET_PATH || '/';
+/** No trailing slash; empty string when serving from domain root (not GitHub project pages). */
+const ROUTER_BASENAME = ASSET_PATH.replace(/\/$/, '') === '' ? '' : ASSET_PATH.replace(/\/$/, '');
 module.exports = (env) => {
   return {
     module: {
@@ -113,6 +116,17 @@ module.exports = (env) => {
     plugins: [
       new HtmlWebpackPlugin({
         template: path.resolve(__dirname, 'src', 'index.html'),
+        filename: 'index.html',
+        base: ASSET_PATH,
+      }),
+      // GitHub Pages serves 404.html for unknown paths; duplicate SPA shell so deep links work on refresh.
+      new HtmlWebpackPlugin({
+        template: path.resolve(__dirname, 'src', 'index.html'),
+        filename: '404.html',
+        base: ASSET_PATH,
+      }),
+      new webpack.DefinePlugin({
+        'process.env.ROUTER_BASENAME': JSON.stringify(ROUTER_BASENAME),
       }),
       new Dotenv({
         systemvars: true,

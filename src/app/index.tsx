@@ -6,8 +6,10 @@ import { AppLayout } from '@app/AppLayout/AppLayout';
 import { AppRoutes } from '@app/routes';
 import '@app/app.css';
 
+const routerBasename = process.env.ROUTER_BASENAME || undefined;
+
 const App: React.FunctionComponent = () => (
-  <Router>
+  <Router basename={routerBasename}>
     <AppLayout>
       <AppRoutes />
     </AppLayout>

@@ -1,3 +1,10 @@
+declare namespace NodeJS {
+  interface ProcessEnv {
+    /** Injected by webpack DefinePlugin (see webpack.common.js). */
+    ROUTER_BASENAME?: string;
+  }
+}
+
 declare module '*.png';
 declare module '*.jpg';
 declare module '*.jpeg';

@@ -9,3 +9,16 @@ storybook-static
 .idea
 .env
 .history
+
+# --- Cursor & Task Management ---
+# Local folder for Jira drafts, research, and notes
+/notes/
+/tasks/
+/scratchpad/
+
+# Temporary markdown files for ticket drafting
+*.draft.md
+*.todo.md
+
+# Cursor-specific configuration (if you want to keep your AI rules private)
+.cursorrules

@@ -32,6 +32,12 @@ export const allRows: ITemplateRow[] = [
     lastModified: '2018-12-11',
   },
   {
+    id: '15',
+    name: 'Malware system detail page',
+    description: 'Malware detection details with matched signatures.',
+    lastModified: '2026-03-25',
+  },
+  {
     id: '3',
     name: 'edge-node-bundle',
     description: 'Edge deployment bundle with custom kickstart.',

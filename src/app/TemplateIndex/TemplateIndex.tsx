@@ -222,7 +222,7 @@ const TemplateIndex: React.FunctionComponent = () => {
                   />
                 </ToolbarItem>
                 <ToolbarItem className="app-toolbar-item-export">
-                  <Button variant="tertiary">Export</Button>
+                  <Button variant="secondary">Export</Button>
                 </ToolbarItem>
               </ToolbarGroup>
               <ToolbarItem variant="pagination" align={{ default: 'alignEnd' }}>

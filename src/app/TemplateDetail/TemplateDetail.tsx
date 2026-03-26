@@ -41,6 +41,7 @@ import type { OnPerPageSelect, OnSetPage } from '@patternfly/react-core/dist/esm
 import BugIcon from '@patternfly/react-icons/dist/esm/icons/bug-icon';
 import CopyIcon from '@patternfly/react-icons/dist/esm/icons/copy-icon';
 import EllipsisVIcon from '@patternfly/react-icons/dist/esm/icons/ellipsis-v-icon';
+import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import ExternalLinkAltIcon from '@patternfly/react-icons/dist/esm/icons/external-link-alt-icon';
 import OutlinedThumbsDownIcon from '@patternfly/react-icons/dist/esm/icons/outlined-thumbs-down-icon';
 import OutlinedThumbsUpIcon from '@patternfly/react-icons/dist/esm/icons/outlined-thumbs-up-icon';
@@ -73,6 +74,14 @@ interface IDetailSystemRow {
   os: string;
   lastSeen: string;
   firstImpacted: string;
+}
+
+interface IMalwareSignatureRow {
+  id: string;
+  signatureName: string;
+  matched: string;
+  newMatches: number;
+  totalMatches: number;
 }
 
 const MOCK_SYSTEMS: IDetailSystemRow[] = [
@@ -123,12 +132,44 @@ const MOCK_SYSTEMS: IDetailSystemRow[] = [
   },
 ];
 
+const MALWARE_SIGNATURES: IMalwareSignatureRow[] = [
+  {
+    id: 'm1',
+    signatureName: 'XFTI_DarkRadiation_ransomware',
+    matched: '25 Mar 2026',
+    newMatches: 1,
+    totalMatches: 1,
+  },
+  {
+    id: 'm2',
+    signatureName: 'XFTI_FinSpy',
+    matched: '25 Mar 2026',
+    newMatches: 2,
+    totalMatches: 2,
+  },
+  {
+    id: 'm3',
+    signatureName: 'XFTI_QuasarRAT',
+    matched: '25 Mar 2026',
+    newMatches: 1,
+    totalMatches: 1,
+  },
+  {
+    id: 'm4',
+    signatureName: 'XFTI_PoisonIvy',
+    matched: '25 Mar 2026',
+    newMatches: 1,
+    totalMatches: 1,
+  },
+];
+
 const TemplateDetail: React.FunctionComponent = () => {
   const { templateId } = useParams<{ templateId: string }>();
   const template = templateId ? getTemplateById(templateId) : undefined;
 
   const isContentExamplePage = template?.id === '13';
   const isRecommendationPage = template?.id === '14';
+  const isMalwarePage = template?.id === '15';
   const hasRepositoriesSystemsTabs = template?.id === '2' || template?.id === '13';
   const omitSectionDivider = hasRepositoriesSystemsTabs;
   const [activeTabKey, setActiveTabKey] = React.useState<string | number>(1);
@@ -142,10 +183,11 @@ const TemplateDetail: React.FunctionComponent = () => {
   const [activeSortIndex, setActiveSortIndex] = React.useState<number | null>(null);
   const [activeSortDirection, setActiveSortDirection] = React.useState<'asc' | 'desc' | null>(null);
   const [isToolbarKebabOpen, setIsToolbarKebabOpen] = React.useState(false);
+  const [isMalwareActionsOpen, setIsMalwareActionsOpen] = React.useState(false);
 
   useDocumentTitle(
     template
-      ? `Lightspeed template | ${isRecommendationPage ? 'Recommendation' : template.name}`
+      ? `Lightspeed template | ${isRecommendationPage ? 'Recommendation' : isMalwarePage ? 'Malware system detail page' : template.name}`
       : 'Lightspeed template | Page template',
   );
 
@@ -410,15 +452,115 @@ const TemplateDetail: React.FunctionComponent = () => {
     </TabContentBody>
   );
 
+  const malwareToolbarAndTable = (
+    <div className="app-systems-toolbar-table-panel">
+      <Toolbar ouiaId="malware-signatures-toolbar" inset={{ default: 'insetNone' }} className="app-template-toolbar">
+        <ToolbarContent>
+          <ToolbarGroup className="app-template-toolbar-leading">
+            <ToolbarItem className="app-toolbar-item-toolbar-filter">
+              <Dropdown
+                isOpen={isToolbarFilterOpen}
+                onOpenChange={setIsToolbarFilterOpen}
+                popperProps={{ appendTo: () => document.body }}
+                onSelect={() => setIsToolbarFilterOpen(false)}
+                toggle={(toggleRef: React.Ref<HTMLButtonElement | HTMLDivElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    variant="default"
+                    isExpanded={isToolbarFilterOpen}
+                    onClick={() => setIsToolbarFilterOpen(!isToolbarFilterOpen)}
+                    aria-label="Filter by signature"
+                  >
+                    Signature
+                  </MenuToggle>
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem value="signature">Signature</DropdownItem>
+                  <DropdownItem value="last-match">Last match</DropdownItem>
+                  <DropdownItem value="total-matches">Total matches</DropdownItem>
+                </DropdownList>
+              </Dropdown>
+            </ToolbarItem>
+            <ToolbarItem className="app-toolbar-item-search">
+              <SearchInput
+                aria-label="Filter by signature"
+                value={searchValue}
+                onChange={(_event, value) => setSearchValue(value)}
+                onClear={() => setSearchValue('')}
+                placeholder="Filter by signature"
+              />
+            </ToolbarItem>
+            <ToolbarItem>
+              <Dropdown
+                isOpen={isToolbarKebabOpen}
+                onOpenChange={setIsToolbarKebabOpen}
+                popperProps={{ appendTo: () => document.body }}
+                onSelect={() => setIsToolbarKebabOpen(false)}
+                toggle={(toggleRef: React.Ref<HTMLButtonElement | HTMLDivElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    variant="plain"
+                    isExpanded={isToolbarKebabOpen}
+                    onClick={() => setIsToolbarKebabOpen(!isToolbarKebabOpen)}
+                    aria-label="More actions"
+                    icon={<EllipsisVIcon />}
+                  />
+                )}
+              >
+                <DropdownList>
+                  <DropdownItem value="more">More actions</DropdownItem>
+                </DropdownList>
+              </Dropdown>
+            </ToolbarItem>
+          </ToolbarGroup>
+        </ToolbarContent>
+      </Toolbar>
+
+      <div className="app-systems-toolbar-table-panel__table pf-v6-u-w-100">
+        <Table
+          aria-label="Matched signatures"
+          borders
+          gridBreakPoint="grid-md"
+          variant="compact"
+          className="pf-v6-u-w-100"
+        >
+          <Thead>
+            <Tr>
+              <Th />
+              <Th>Signature name</Th>
+              <Th>Matched</Th>
+              <Th>New matches...</Th>
+              <Th>Total matches</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {MALWARE_SIGNATURES.map((row) => (
+              <Tr key={row.id}>
+                <Td dataLabel="Expand">{'>'}</Td>
+                <Td dataLabel="Signature name">{row.signatureName}</Td>
+                <Td dataLabel="Matched">{row.matched}</Td>
+                <Td dataLabel="New matches...">{row.newMatches}</Td>
+                <Td dataLabel="Total matches">{row.totalMatches}</Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <PageSection type="breadcrumb" isWidthLimited={false} aria-label="Breadcrumb">
         <Breadcrumb>
           <BreadcrumbItem to="#">RHEL</BreadcrumbItem>
           <BreadcrumbItem to="#">Inventory</BreadcrumbItem>
-          <BreadcrumbItem to="/systems">Page template</BreadcrumbItem>
+          <BreadcrumbItem to={isMalwarePage ? '#' : '/systems'}>
+            {isMalwarePage ? 'Malware detection signatures' : 'Page template'}
+          </BreadcrumbItem>
           <BreadcrumbItem isActive>
-            {isRecommendationPage ? 'Recommendation detail page' : template.name}
+            {isRecommendationPage ? 'Recommendation detail page' : isMalwarePage ? 'XFTI_FritzFrog' : template.name}
           </BreadcrumbItem>
         </Breadcrumb>
       </PageSection>
@@ -479,7 +621,7 @@ const TemplateDetail: React.FunctionComponent = () => {
 
               <p className="pf-v6-u-m-0 pf-v6-u-mt-sm">Recommendation last modified on: 11 Dec 2018</p>
 
-              <Grid hasGutter className="pf-v6-u-mt-md pf-v6-u-w-100">
+              <Grid hasGutter className="pf-v6-u-mt-sm pf-v6-u-w-100">
                 <GridItem span={12} md={8}>
                   <Flex
                     direction={{ default: 'column' }}
@@ -586,6 +728,121 @@ const TemplateDetail: React.FunctionComponent = () => {
                 </GridItem>
               </Grid>
             </>
+          ) : isMalwarePage ? (
+            <>
+              <Flex
+                justifyContent={{ default: 'justifyContentSpaceBetween' }}
+                alignItems={{ default: 'alignItemsCenter' }}
+                flexWrap={{ default: 'wrap' }}
+                className="pf-v6-u-mb-0 pf-v6-u-pb-0"
+              >
+                <FlexItem>
+                  <Flex spaceItems={{ default: 'spaceItemsSm' }} alignItems={{ default: 'alignItemsCenter' }} flexWrap={{ default: 'wrap' }}>
+                    <Title headingLevel="h1" size="2xl" className="pf-v6-u-mb-0">
+                      XFTI_FritzFrog
+                    </Title>
+                    <Label isCompact>Bot</Label>
+                    <Label isCompact color="red">
+                      Matched
+                    </Label>
+                  </Flex>
+                </FlexItem>
+                <FlexItem>
+                  <Dropdown
+                    isOpen={isMalwareActionsOpen}
+                    onOpenChange={setIsMalwareActionsOpen}
+                    popperProps={{ appendTo: () => document.body }}
+                    onSelect={() => setIsMalwareActionsOpen(false)}
+                    toggle={(toggleRef: React.Ref<HTMLButtonElement | HTMLDivElement>) => (
+                      <MenuToggle
+                        ref={toggleRef}
+                        variant="secondary"
+                        isExpanded={isMalwareActionsOpen}
+                        onClick={() => setIsMalwareActionsOpen(!isMalwareActionsOpen)}
+                        aria-label="Actions"
+                      >
+                        Actions
+                      </MenuToggle>
+                    )}
+                  >
+                    <DropdownList>
+                      <DropdownItem value="disable">Disable signature from malware analysis</DropdownItem>
+                    </DropdownList>
+                  </Dropdown>
+                </FlexItem>
+              </Flex>
+
+              <div className="pf-v6-u-m-0 pf-v6-u-mt-sm">
+                <p className="pf-v6-u-m-0">Detects FritzFrog P2P botnet samples.</p>
+                <Button
+                  variant="link"
+                  isInline
+                  icon={<ExternalLinkAltIcon />}
+                  iconPosition="right"
+                  component="a"
+                  href="#"
+                  className="pf-v6-u-m-0 pf-v6-u-p-0"
+                >
+                  Background reference
+                </Button>
+              </div>
+
+              <Grid hasGutter className="pf-v6-u-mt-md pf-v6-u-w-100">
+                <GridItem span={12} md={2}>
+                  <DescriptionList isCompact>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Matched systems</DescriptionListTerm>
+                      <DescriptionListDescription>
+                        <Flex spaceItems={{ default: 'spaceItemsXs' }} alignItems={{ default: 'alignItemsCenter' }}>
+                          <ExclamationCircleIcon color="#c9190b" />
+                          <span>3/16</span>
+                        </Flex>
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                  </DescriptionList>
+                </GridItem>
+                <GridItem span={12} md={2}>
+                  <DescriptionList isCompact>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Last match</DescriptionListTerm>
+                      <DescriptionListDescription>25 Mar 2026</DescriptionListDescription>
+                    </DescriptionListGroup>
+                  </DescriptionList>
+                </GridItem>
+                <GridItem span={12} md={2}>
+                  <DescriptionList isCompact>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Rule category</DescriptionListTerm>
+                      <DescriptionListDescription>Malware Family</DescriptionListDescription>
+                    </DescriptionListGroup>
+                  </DescriptionList>
+                </GridItem>
+                <GridItem span={12} md={2}>
+                  <DescriptionList isCompact>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Intended usage</DescriptionListTerm>
+                      <DescriptionListDescription>Hunting and Identification</DescriptionListDescription>
+                    </DescriptionListGroup>
+                  </DescriptionList>
+                </GridItem>
+                <GridItem span={12} md={2}>
+                  <DescriptionList isCompact>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Source</DescriptionListTerm>
+                      <DescriptionListDescription>IBM</DescriptionListDescription>
+                    </DescriptionListGroup>
+                  </DescriptionList>
+                </GridItem>
+                <GridItem span={12} md={2}>
+                  <DescriptionList isCompact>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>Author</DescriptionListTerm>
+                      <DescriptionListDescription>IBM X-Force Threat Intelligence Malware Team</DescriptionListDescription>
+                    </DescriptionListGroup>
+                  </DescriptionList>
+                </GridItem>
+              </Grid>
+            </>
           ) : (
             <>
               <Flex
@@ -657,7 +914,7 @@ const TemplateDetail: React.FunctionComponent = () => {
               )}
             </>
           )}
-          {!isContentExamplePage && !isRecommendationPage && (
+          {!isContentExamplePage && !isRecommendationPage && !isMalwarePage && (
             <Link to="/systems" className="pf-v6-c-button pf-m-link pf-m-inline pf-v6-u-mt-sm">
               Back to templates
             </Link>
@@ -671,7 +928,7 @@ const TemplateDetail: React.FunctionComponent = () => {
         type={hasRepositoriesSystemsTabs ? 'tabs' : 'default'}
         hasBodyWrapper
         isWidthLimited={false}
-        aria-label={hasRepositoriesSystemsTabs ? 'Template tabs' : 'Systems'}
+        aria-label={hasRepositoriesSystemsTabs ? 'Template tabs' : isMalwarePage ? 'Matched signatures' : 'Systems'}
         className={`app-systems-page app-template-detail-systems-section${hasRepositoriesSystemsTabs ? ' app-tabbed-detail-systems-section' : ''} ${hasRepositoriesSystemsTabs ? 'pf-v6-u-mb-sm' : 'pf-v6-u-mb-md'}`}
       >
         {hasRepositoriesSystemsTabs ? (
@@ -691,6 +948,13 @@ const TemplateDetail: React.FunctionComponent = () => {
               {systemsToolbarAndTable}
             </Tab>
           </Tabs>
+        ) : isMalwarePage ? (
+          <Flex direction={{ default: 'column' }} className="pf-v6-u-w-100">
+            <Title headingLevel="h2" size="xl" className="pf-v6-u-mt-0 pf-v6-u-mb-md">
+              Matched signatures
+            </Title>
+            {malwareToolbarAndTable}
+          </Flex>
         ) : (
           <Flex direction={{ default: 'column' }} className="pf-v6-u-w-100">
             <Title headingLevel="h2" size="xl" className="pf-v6-u-mt-0 pf-v6-u-mb-md">
